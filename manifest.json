@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Delta Force - Auto nhập Giftcode",
+  "version": "2.0.0",
+  "description": "Nhập danh sách giftcode và tự động đổi lần lượt trên trang Trung Tâm Đổi Quà của Delta Force (Garena).",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://redeem.df.garena.sg/*",
+    "https://*.playdeltaforce.com/*cdkgarena*",
+    "https://*.garena.com/*cdkgarena*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "Delta Force Giftcode",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://redeem.df.garena.sg/*",
+        "https://*.playdeltaforce.com/*cdkgarena*",
+        "https://*.garena.com/*cdkgarena*"
+      ],
+      "js": ["classify.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

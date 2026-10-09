@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Delta Force Giftcode</title>
+  <style>
+    :root {
+      --bg: #0a0f12; --panel: #121b20; --panel2: #18252b;
+      --line: #2a3a41; --line2: #4b6169;
+      --text: #dde6ea; --muted: #7d909a;
+      --amber: #f2b61c; --amber2: #a97d0b;
+      --ok: #38e08f; --bad: #ff5a4d; --info: #6cc4f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      width: 420px; margin: 0; padding: 0 12px 12px; color: var(--text);
+      font: 13px/1.4 "Bahnschrift", "Rajdhani", "Arial Narrow", "Segoe UI", sans-serif;
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px) 0 0 / 100% 4px,
+        radial-gradient(120% 60% at 50% -10%, #17282f 0, transparent 60%),
+        var(--bg);
+    }
+    .hazard { height: 5px; margin: 0 -12px 10px; background: repeating-linear-gradient(-45deg, var(--amber) 0 8px, #0a0f12 8px 16px); }
+
+    /* Header */
+    header { display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin-bottom: 10px;
+             background: linear-gradient(90deg, var(--panel2), var(--panel)); border: 1px solid var(--line); border-left: 4px solid var(--amber); }
+    .logo { width: 32px; height: 30px; background: #fff; clip-path: polygon(50% 0, 100% 100%, 0 100%); position: relative; flex: none; }
+    .logo::after { content: ""; position: absolute; inset: 11px 9px 0; background: var(--panel2); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+    h1 { margin: 0; font-size: 19px; font-style: italic; letter-spacing: 3px; text-transform: uppercase; color: #fff; line-height: 1; white-space: nowrap; }
+    h1 span { color: var(--amber); }
+    .sub { font-size: 9.5px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 3px; white-space: nowrap; }
+    .chip { margin-left: auto; flex: none; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 9px; border: 1px solid; white-space: nowrap; }
+    .chip::before { content: "●"; margin-right: 5px; }
+    .chip.on { color: var(--ok); border-color: var(--ok); background: rgba(56,224,143,.08); }
+    .chip.off { color: var(--bad); border-color: var(--bad); background: rgba(255,90,77,.08); }
+
+    /* Banner cảnh báo chưa mở trang */
+    .banner { display: none; align-items: center; gap: 10px; padding: 8px 10px; margin-bottom: 10px; font-size: 12px;
+              background: rgba(255,90,77,.1); border: 1px solid var(--bad); border-left: 4px solid var(--bad); }
+    .banner.show { display: flex; }
+    .banner span { flex: 1; }
+    .banner button { flex: none; width: auto; padding: 7px 12px; }
+
+    /* Khung HUD */
+    .panel { position: relative; background: var(--panel); border: 1px solid var(--line); padding: 10px; margin-bottom: 10px; }
+    .panel::before, .panel::after { content: ""; position: absolute; width: 12px; height: 12px; pointer-events: none; }
+    .panel::before { left: -1px; top: -1px; border-left: 2px solid var(--amber); border-top: 2px solid var(--amber); }
+    .panel::after { right: -1px; bottom: -1px; border-right: 2px solid var(--amber); border-bottom: 2px solid var(--amber); }
+    .sec { display: flex; align-items: center; gap: 7px; margin: 0 0 7px; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--amber); }
+    .sec::before { content: ""; width: 8px; height: 8px; background: var(--amber); transform: skewX(-20deg); }
+    .sec em { margin-left: auto; font-style: normal; letter-spacing: 1px; color: var(--muted); font-size: 11px; }
+
+    textarea, input { width: 100%; background: #0b1215; color: var(--text); border: 1px solid var(--line); padding: 7px 8px;
+                      font: 12px/1.4 ui-monospace, Consolas, monospace; outline: none; }
+    textarea:focus, input:focus { border-color: var(--amber); }
+    #codes { height: 96px; resize: vertical; }
+    #list { height: 92px; resize: vertical; }
+
+    /* Nút */
+    .row { display: flex; gap: 6px; margin-top: 8px; }
+    .btn { flex: 1; padding: 9px 6px; border: 0; cursor: pointer; background: var(--amber); color: #111;
+           font: 700 11px "Bahnschrift", "Arial Narrow", sans-serif; letter-spacing: 1.6px; text-transform: uppercase;
+           clip-path: polygon(9px 0, 100% 0, calc(100% - 9px) 100%, 0 100%); transition: filter .15s, transform .05s; }
+    .btn:hover:not(:disabled) { filter: brightness(1.15); }
+    .btn:active:not(:disabled) { transform: translateY(1px); }
+    .btn.ghost { background: #2a3a41; color: var(--text); }
+    .btn.danger { background: #8f2a24; color: #fff; }
+    .btn:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* Tiến độ */
+    .bar { height: 12px; background: #0b1215; border: 1px solid var(--line); overflow: hidden; }
+    .bar > div { height: 100%; width: 0; transition: width .3s;
+                 background: repeating-linear-gradient(-45deg, var(--amber) 0 7px, var(--amber2) 7px 14px); background-size: 20px 20px; }
+    .bar.run > div { animation: slide .8s linear infinite; }
+    @keyframes slide { to { background-position: 20px 0; } }
+    .pline { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; }
+    #cur { color: var(--amber); font-family: ui-monospace, Consolas, monospace; letter-spacing: 0; }
+    #note { margin-top: 4px; min-height: 16px; font-size: 12px; color: var(--muted); }
+    #note.warn { color: var(--amber); }
+
+    /* Thẻ kết quả (đồng thời là tab) */
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .card { padding: 8px 10px; text-align: left; cursor: pointer; background: var(--panel2); border: 1px solid var(--line); color: var(--muted);
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); font: inherit; }
+    .card b { display: block; font-size: 26px; line-height: 1.1; font-family: "Bahnschrift", "Arial Narrow", sans-serif; }
+    .card small { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; }
+    .card.success b { color: var(--ok); } .card.invalid b { color: var(--bad); }
+    .card.success.active { border-color: var(--ok); background: rgba(56,224,143,.1); color: var(--text); }
+    .card.invalid.active { border-color: var(--bad); background: rgba(255,90,77,.1); color: var(--text); }
+    #listMeta { margin: 8px 0 4px; font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+
+    details { margin-bottom: 10px; border: 1px solid var(--line); background: var(--panel); padding: 6px 10px; }
+    summary { cursor: pointer; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--amber); }
+    .grid { display: grid; grid-template-columns: 1fr 64px; gap: 6px 8px; margin-top: 8px; align-items: center; font-size: 12px; }
+    details p { margin: 8px 0 4px; font-size: 11px; color: var(--muted); }
+    details input.full { margin-top: 4px; }
+
+    /* Nhật ký */
+    #log { max-height: 210px; overflow: auto; border: 1px solid var(--line); background: #0b1215; }
+    .empty { padding: 14px; text-align: center; color: var(--muted); font-size: 12px; }
+    .li { padding: 6px 9px; border-bottom: 1px solid #172228; border-left: 3px solid var(--line2); display: grid; grid-template-columns: 58px 1fr; gap: 2px 8px; font-size: 12px; }
+    .li.ok { border-left-color: var(--ok); } .li.bad { border-left-color: var(--bad); }
+    .li.warn { border-left-color: var(--amber); background: rgba(242,182,28,.06); } .li.info { border-left-color: var(--info); }
+    .t { color: var(--muted); font-family: ui-monospace, Consolas, monospace; font-size: 11px; padding-top: 1px; }
+    .head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .badge { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; padding: 1px 7px; text-transform: uppercase; color: #0a0f12;
+             clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%); }
+    .badge.ok { background: var(--ok); } .badge.bad { background: var(--bad); }
+    .code { font-family: ui-monospace, Consolas, monospace; font-weight: 700; color: #fff; word-break: break-all; }
+    .reason { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line2); padding: 0 5px; }
+    .msg { grid-column: 2; color: var(--muted); font-size: 11.5px; }
+    .li.warn .msg, .li.info .msg { color: var(--text); }
+    ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: #35474f; }
+  </style>
+</head>
+<body>
+  <div class="hazard"></div>
+
+  <header>
+    <div class="logo"></div>
+    <div>
+      <h1>Delta <span>Force</span></h1>
+      <div class="sub">Giftcode Auto Redeem</div>
+    </div>
+    <div class="chip off" id="chip">Chưa mở trang</div>
+  </header>
+
+  <div class="banner" id="banner">
+    <span>Chưa mở trang đổi quà Delta Force. Hãy mở trang (và đăng nhập) rồi bấm <b>Bắt đầu / Tiếp tục</b>.</span>
+    <button class="btn" id="openPage">Mở trang</button>
+  </div>
+
+  <div class="panel">
+    <h2 class="sec">Danh sách giftcode <em id="codeCount">0 code</em></h2>
+    <textarea id="codes" placeholder="Mỗi dòng 1 code (hoặc cách nhau bằng dấu phẩy / khoảng trắng)"></textarea>
+    <div class="row">
+      <button class="btn" id="start">Bắt đầu</button>
+      <button class="btn ghost" id="pause">Tạm dừng</button>
+      <button class="btn ghost" id="resume">Tiếp tục</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2 class="sec">Tiến độ</h2>
+    <div class="bar" id="bar"><div id="fill"></div></div>
+    <div class="pline"><span id="progress">0/0 · 0%</span><span id="cur"></span></div>
+    <div id="note"></div>
+  </div>
+
+  <div class="panel">
+    <h2 class="sec">Kết quả</h2>
+    <div class="cards">
+      <button class="card success active" id="cardSuccess"><b id="cntSuccess">0</b><small>Thành công</small></button>
+      <button class="card invalid" id="cardInvalid"><b id="cntInvalid">0</b><small>Không hợp lệ</small></button>
+    </div>
+    <div id="listMeta"></div>
+    <textarea id="list" readonly placeholder="Chưa có code nào trong mục này"></textarea>
+    <div class="row">
+      <button class="btn ghost" id="copy">Copy</button>
+      <button class="btn ghost" id="dlTab">Tải .txt</button>
+      <button class="btn ghost" id="export">Xuất CSV</button>
+      <button class="btn danger" id="clear">Xoá hết</button>
+    </div>
+  </div>
+
+  <details>
+    <summary>Cài đặt nâng cao</summary>
+    <div class="grid">
+      <label>Delay tối thiểu giữa 2 code (giây)</label><input id="delayMin" type="number" min="1" value="4" />
+      <label>Delay tối đa (giây)</label><input id="delayMax" type="number" min="1" value="8" />
+      <label>Chờ khi bị giới hạn tốc độ (giây)</label><input id="cooldown" type="number" min="5" value="30" />
+      <label>Số lần thử lại khi bị giới hạn</label><input id="maxRetry" type="number" min="0" value="3" />
+    </div>
+    <p>Chỉ điền khi extension không tự tìm được ô/nút (CSS selector):</p>
+    <input id="inputSelector" class="full" placeholder="Selector ô nhập code" />
+    <input id="buttonSelector" class="full" placeholder='Selector nút "Đổi"' />
+  </details>
+
+  <div class="panel">
+    <h2 class="sec">Nhật ký <em id="logCount"></em></h2>
+    <div id="log"></div>
+  </div>
+
+  <script src="classify.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
